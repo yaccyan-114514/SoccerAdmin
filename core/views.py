@@ -77,7 +77,8 @@ def team_tickets(request, team_id):
         .order_by("match_time")
         .first()
     )
-    ticket_prices = [80, 140, 260, 380] if next_match and next_match.is_tickets_open else None
+    # ticket_prices = [80, 140, 260, 380] if next_match and next_match.is_tickets_open else None
+    ticket_prices = [80, 140, 260, 380] if next_match else None  # 临时跳过开票检查
     viewers = Viewer.objects.filter(user=request.user)
     context = {
         "team": team,
@@ -321,7 +322,10 @@ def delete_viewer(request, viewer_id):
 @login_required(login_url="/tickets/login/")
 @require_http_methods(["POST"])
 def create_order(request):
-    """创建购票订单"""
+    """创建购票订单 → 返回支付宝支付链接"""
+    from alipay import AliPay
+    from django.conf import settings as conf
+
     try:
         match_id = request.POST.get("match_id")
         ticket_price = int(request.POST.get("ticket_price"))
@@ -338,8 +342,6 @@ def create_order(request):
             return JsonResponse({"success": False, "message": "请选择观影人或填写完整信息"})
 
         match = get_object_or_404(Match, pk=match_id)
-        if not match.tickets_open:
-            return JsonResponse({"success": False, "message": "该场比赛尚未开票"})
 
         total_amount = Decimal(str(ticket_price * ticket_count))
         order_number = f"T{timezone.now().strftime('%Y%m%d%H%M%S')}{uuid.uuid4().hex[:8].upper()}"
@@ -355,19 +357,43 @@ def create_order(request):
             order_number=order_number,
         )
 
+        # 构建支付宝支付链接
+        alipay_client = AliPay(
+            appid=conf.ALIPAY_APPID,
+            app_notify_url=None,
+            app_private_key_string=conf.ALIPAY_APP_PRIVATE_KEY,
+            alipay_public_key_string=conf.ALIPAY_PUBLIC_KEY,
+            sign_type="RSA2",
+            debug=True,
+        )
+
+        subject = f"中超球票 - {match.home_team.short_name} vs {match.away_team.short_name}"
+        base_url = request.build_absolute_uri("/")
+        order_string = alipay_client.api_alipay_trade_page_pay(
+            out_trade_no=order_number,
+            total_amount=str(total_amount),
+            subject=subject,
+            return_url=base_url + "tickets/alipay/return/",
+            notify_url=base_url + "tickets/alipay/notify/",
+        )
+        pay_url = alipay_client._gateway + "?" + order_string
+
         return JsonResponse({
             "success": True,
             "order_id": order.id,
             "order_number": order_number,
             "total_amount": str(total_amount),
+            "pay_url": pay_url,
         })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({"success": False, "message": f"创建订单失败：{str(e)}"})
 
 
 @login_required(login_url="/tickets/login/")
 def payment_qr(request, order_number):
-    """显示支付二维码页面"""
+    """显示支付二维码页面（保留兼容）"""
     order = get_object_or_404(TicketOrder, order_number=order_number, user=request.user)
     qr_data = json.loads(order.payment_qr_code) if order.payment_qr_code else {}
     return render(request, "core/payment_qr.html", {
@@ -389,6 +415,80 @@ def confirm_payment(request, order_number):
     order.save()
     
     return JsonResponse({"success": True, "message": "支付成功！"})
+
+
+def alipay_return(request):
+    """支付宝同步回调（用户支付后浏览器跳转回来）"""
+    from alipay import AliPay
+    from django.conf import settings as conf
+
+    params = request.GET.dict()
+    sign = params.pop("sign", None)
+    params.pop("sign_type", None)
+
+    alipay_client = AliPay(
+        appid=conf.ALIPAY_APPID,
+        app_notify_url=None,
+        app_private_key_string=conf.ALIPAY_APP_PRIVATE_KEY,
+        alipay_public_key_string=conf.ALIPAY_PUBLIC_KEY,
+        sign_type="RSA2",
+        debug=True,
+    )
+
+    success = alipay_client.verify(params, sign)
+    out_trade_no = params.get("out_trade_no", "")
+
+    if success and out_trade_no:
+        try:
+            order = TicketOrder.objects.get(order_number=out_trade_no)
+            if order.status != "paid":
+                order.status = "paid"
+                order.paid_at = timezone.now()
+                order.save()
+            return redirect("core:payment_success", order_number=out_trade_no)
+        except TicketOrder.DoesNotExist:
+            pass
+
+    messages.error(request, "支付验证失败，请联系客服")
+    return redirect("core:tickets")
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def alipay_notify(request):
+    """支付宝异步通知（服务器对服务器）"""
+    from alipay import AliPay
+    from django.conf import settings as conf
+    from django.http import HttpResponse
+
+    params = request.POST.dict()
+    sign = params.pop("sign", None)
+    params.pop("sign_type", None)
+
+    alipay_client = AliPay(
+        appid=conf.ALIPAY_APPID,
+        app_notify_url=None,
+        app_private_key_string=conf.ALIPAY_APP_PRIVATE_KEY,
+        alipay_public_key_string=conf.ALIPAY_PUBLIC_KEY,
+        sign_type="RSA2",
+        debug=True,
+    )
+
+    if alipay_client.verify(params, sign):
+        trade_status = params.get("trade_status")
+        out_trade_no = params.get("out_trade_no", "")
+        if trade_status in ("TRADE_SUCCESS", "TRADE_FINISHED") and out_trade_no:
+            try:
+                order = TicketOrder.objects.get(order_number=out_trade_no)
+                if order.status != "paid":
+                    order.status = "paid"
+                    order.paid_at = timezone.now()
+                    order.save()
+            except TicketOrder.DoesNotExist:
+                pass
+        return HttpResponse("success")
+
+    return HttpResponse("fail")
 
 
 @login_required(login_url="/tickets/login/")

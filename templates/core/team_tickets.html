@@ -45,18 +45,18 @@
       <div class="stadium-section">
         <!-- 区域切换标签 -->
         <div class="zone-tabs">
-          <button class="zone-tab active" data-zone="all">全局</button>
+          <button class="zone-tab active" data-zone="all">全局总览</button>
           <button class="zone-tab" data-zone="A" style="--zone-color:#e74c3c;">
-            <span class="tab-dot" style="background:#e74c3c;"></span>A · ¥380
+            <span class="tab-dot" style="background:#e74c3c;"></span>A区 VIP · ¥380
           </button>
           <button class="zone-tab" data-zone="B" style="--zone-color:#3498db;">
-            <span class="tab-dot" style="background:#3498db;"></span>B · ¥260
+            <span class="tab-dot" style="background:#3498db;"></span>B区 主看台 · ¥260
           </button>
           <button class="zone-tab" data-zone="C" style="--zone-color:#f39c12;">
-            <span class="tab-dot" style="background:#f39c12;"></span>C · ¥140
+            <span class="tab-dot" style="background:#f39c12;"></span>C区 侧看台 · ¥140
           </button>
           <button class="zone-tab" data-zone="D" style="--zone-color:#2ecc71;">
-            <span class="tab-dot" style="background:#2ecc71;"></span>D · ¥80
+            <span class="tab-dot" style="background:#2ecc71;"></span>D区 球门后方 · ¥80
           </button>
         </div>
 
@@ -75,16 +75,22 @@
           <!-- 座位由 JS 动态生成 -->
         </div>
 
+        <!-- 座位图例 -->
+        <div class="seat-legend">
+          <span class="legend-item"><span class="legend-dot legend-available"></span>可选</span>
+          <span class="legend-item"><span class="legend-dot legend-sold"></span>已售</span>
+          <span class="legend-item"><span class="legend-dot legend-selected"></span>已选</span>
+        </div>
+
         <!-- 底部选座信息栏 -->
         <div class="seat-bar" id="seatBar" style="display:none;">
           <div class="seat-bar-info">
-            <span class="seat-bar-dot" id="seatBarDot"></span>
             <span id="seatBarText"></span>
             <button type="button" class="seat-bar-close" id="seatBarClose">&times;</button>
           </div>
           <div class="seat-bar-action">
             <span class="seat-bar-price" id="seatBarPrice"></span>
-            <button type="button" class="btn-confirm-seat" id="confirmSeatBtn">确认选座</button>
+            <button type="button" class="btn-confirm-seat" id="confirmSeatBtn">确认选座，去支付</button>
           </div>
         </div>
       </div>
@@ -119,35 +125,6 @@
           <input type="tel" id="viewerPhone" name="phone" maxlength="11" required placeholder="请输入11位手机号">
         </div>
         <button type="submit" class="btn-primary" id="viewerSubmitBtn">保存</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- 购票表单弹窗 -->
-  <div id="ticketModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h3>填写购票信息</h3>
-      <form id="ticketForm">
-        <input type="hidden" id="matchId" name="match_id">
-        <input type="hidden" id="ticketPrice" name="ticket_price">
-        <input type="hidden" id="viewerId" name="viewer_id">
-        <input type="hidden" id="idCard" name="id_card">
-        <input type="hidden" id="phone" name="phone">
-        <div class="form-group">
-          <label>票档价格：<span id="selectedPrice"></span></label>
-        </div>
-        <div class="form-group">
-          <label>观影人：<span id="selectedViewer"></span></label>
-        </div>
-        <div class="form-group">
-          <label for="ticketCount">购票张数：</label>
-          <input type="number" id="ticketCount" name="ticket_count" min="1" max="10" value="1" required>
-        </div>
-        <div class="form-group">
-          <label>总金额：<span id="totalAmount">¥0</span></label>
-        </div>
-        <button type="submit" class="btn-primary">确认购买</button>
       </form>
     </div>
   </div>
@@ -208,19 +185,18 @@
 
     // 已售座位（模拟随机 15% 已售）
     const soldSeats = new Set();
-    let selectedSeat = null;
+    // 多选座位 Map: seatId -> { zone, row, col, price, name, color }
+    const selectedSeats = new Map();
 
     function buildSeats() {
       const map = document.getElementById('stadiumMap');
       if (!map) return;
 
       // 清除旧座位
-      map.querySelectorAll('.seat-row').forEach(r => r.remove());
+      map.querySelectorAll('.seats-svg').forEach(r => r.remove());
 
       const CX = 300, CY = 220; // 椭圆中心
-      // 每个区域对应的环带(从内到外)
       const rings = [
-        // zone, 排数起, 排数止, 内半径rx起, ry起
         { zone: 'A', rowStart: 1, rowEnd: 3,   rxBase: 155, ryBase: 105 },
         { zone: 'B', rowStart: 4, rowEnd: 7,   rxBase: 185, ryBase: 125 },
         { zone: 'C', rowStart: 8, rowEnd: 11,  rxBase: 225, ryBase: 155 },
@@ -228,20 +204,18 @@
       ];
 
       const allSeats = [];
-      const step = 10; // 每环半径增量
+      const step = 10;
 
       rings.forEach(ring => {
         for (let r = ring.rowStart; r <= ring.rowEnd; r++) {
           const idx = r - ring.rowStart;
           const rx = ring.rxBase + idx * step;
           const ry = ring.ryBase + idx * (step * 0.7);
-          // 计算环上座位数量，越外越多
           const count = Math.floor(2 * Math.PI * Math.sqrt((rx*rx + ry*ry)/2) / 14);
           for (let i = 0; i < count; i++) {
             const angle = (2 * Math.PI * i) / count - Math.PI / 2;
             const x = CX + rx * Math.cos(angle);
             const y = CY + ry * Math.sin(angle);
-            // 排除草坪区域 (内部椭圆)
             const dx = (x - CX) / 140;
             const dy = (y - CY) / 92;
             if (dx*dx + dy*dy < 1) continue;
@@ -253,11 +227,35 @@
         }
       });
 
-      // 用 SVG 渲染所有座位
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('viewBox', '0 0 600 440');
       svg.classList.add('seats-svg');
 
+      // 绘制体育场外框（椭圆边框）
+      const outerRx = 295, outerRy = 215;
+      const stadiumBorder = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      stadiumBorder.setAttribute('cx', CX);
+      stadiumBorder.setAttribute('cy', CY);
+      stadiumBorder.setAttribute('rx', outerRx);
+      stadiumBorder.setAttribute('ry', outerRy);
+      stadiumBorder.setAttribute('fill', 'none');
+      stadiumBorder.setAttribute('stroke', '#bbb');
+      stadiumBorder.setAttribute('stroke-width', '2.5');
+      svg.appendChild(stadiumBorder);
+
+      // 绘制内框（草坪周围的看台边界）
+      const innerBorder = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      innerBorder.setAttribute('cx', CX);
+      innerBorder.setAttribute('cy', CY);
+      innerBorder.setAttribute('rx', 140);
+      innerBorder.setAttribute('ry', 92);
+      innerBorder.setAttribute('fill', 'none');
+      innerBorder.setAttribute('stroke', '#ccc');
+      innerBorder.setAttribute('stroke-width', '1.5');
+      innerBorder.setAttribute('stroke-dasharray', '4 3');
+      svg.appendChild(innerBorder);
+
+      // 绘制座位
       allSeats.forEach(s => {
         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         circle.setAttribute('cx', s.x.toFixed(1));
@@ -267,11 +265,11 @@
         circle.dataset.zone = s.zone;
         circle.dataset.row = s.row;
         circle.dataset.col = s.col;
+        circle.style.fill = ZONES[s.zone].color;
         if (s.sold) {
           circle.classList.add('seat-dot', 'seat-sold');
         } else {
           circle.classList.add('seat-dot', 'seat-available');
-          circle.style.fill = ZONES[s.zone].color;
         }
         svg.appendChild(circle);
       });
@@ -280,38 +278,65 @@
     }
     buildSeats();
 
-    // 座位点击
+    // 更新底部选座栏
+    function updateSeatBar() {
+      const bar = document.getElementById('seatBar');
+      if (selectedSeats.size === 0) {
+        bar.style.display = 'none';
+        return;
+      }
+      bar.style.display = 'flex';
+
+      // 汇总信息
+      const seatTexts = [];
+      let totalPrice = 0;
+      selectedSeats.forEach((info, id) => {
+        seatTexts.push(`${info.name} ${info.row}排${info.col}座`);
+        totalPrice += info.price;
+      });
+
+      document.getElementById('seatBarText').textContent = seatTexts.join('、');
+      document.getElementById('seatBarPrice').innerHTML = `<span style="color:var(--primary);font-size:1.2rem;font-weight:700;">¥${totalPrice}</span> <span style="color:var(--text-muted);font-size:0.85rem;">（已选 ${selectedSeats.size} 座）</span>`;
+    }
+
+    // 座位点击（多选）
     document.getElementById('stadiumMap')?.addEventListener('click', function(e) {
       const dot = e.target.closest('.seat-dot');
       if (!dot || dot.classList.contains('seat-sold')) return;
 
-      // 取消之前选中
-      this.querySelectorAll('.seat-selected').forEach(s => {
-        s.classList.remove('seat-selected');
-        s.style.fill = ZONES[s.dataset.zone].color;
-      });
-
-      dot.classList.add('seat-selected');
-      dot.style.fill = '#fff';
+      const seatId = dot.dataset.seatId;
       const zone = dot.dataset.zone;
       const info = ZONES[zone];
-      selectedSeat = { zone, row: dot.dataset.row, col: dot.dataset.col, price: info.price, name: info.name, color: info.color };
 
-      // 显示底部栏
-      const bar = document.getElementById('seatBar');
-      document.getElementById('seatBarDot').style.background = info.color;
-      document.getElementById('seatBarText').textContent = `${info.name} ${dot.dataset.row}排${dot.dataset.col}座`;
-      document.getElementById('seatBarPrice').innerHTML = `<span style="color:var(--primary);font-size:1.2rem;font-weight:700;">¥${info.price}</span> <span style="color:var(--text-muted);font-size:0.85rem;">(已选: 1)</span>`;
-      bar.style.display = 'flex';
+      if (selectedSeats.has(seatId)) {
+        // 取消选中
+        selectedSeats.delete(seatId);
+        dot.classList.remove('seat-selected');
+        dot.style.fill = info.color;
+      } else {
+        // 选中（最多 5 个）
+        if (selectedSeats.size >= 5) {
+          alert('最多可选择 5 个座位');
+          return;
+        }
+        selectedSeats.set(seatId, {
+          zone, row: dot.dataset.row, col: dot.dataset.col,
+          price: info.price, name: info.name, color: info.color
+        });
+        dot.classList.add('seat-selected');
+        dot.style.fill = '#fff';
+      }
+
+      updateSeatBar();
     });
 
-    // 关闭选座
+    // 关闭选座（清空所有选中）
     document.getElementById('seatBarClose')?.addEventListener('click', function() {
       document.querySelectorAll('.seat-selected').forEach(s => {
         s.classList.remove('seat-selected');
         s.style.fill = ZONES[s.dataset.zone].color;
       });
-      selectedSeat = null;
+      selectedSeats.clear();
       document.getElementById('seatBar').style.display = 'none';
     });
 
@@ -331,26 +356,76 @@
       });
     });
 
-    // 确认选座按钮 → 打开购票弹窗
+    // 确认选座按钮 → 直接创建订单并跳转支付
     const confirmSeatBtn = document.getElementById('confirmSeatBtn');
     if (confirmSeatBtn) {
-      confirmSeatBtn.addEventListener('click', function() {
-        if (!selectedSeat) return;
+      confirmSeatBtn.addEventListener('click', async function() {
+        if (selectedSeats.size === 0) return;
         const selectedViewer = document.querySelector('input[name="viewer"]:checked');
         if (!selectedViewer) {
           alert('请先选择观影人');
           return;
         }
-        document.getElementById('matchId').value = matchId;
-        document.getElementById('ticketPrice').value = selectedSeat.price;
-        document.getElementById('selectedPrice').textContent = `¥${selectedSeat.price}（${selectedSeat.name} ${selectedSeat.row}排${selectedSeat.col}座）`;
-        document.getElementById('viewerId').value = selectedViewer.value;
-        document.getElementById('idCard').value = selectedViewer.dataset.idcard;
-        document.getElementById('phone').value = selectedViewer.dataset.phone;
-        document.getElementById('selectedViewer').textContent = selectedViewer.dataset.name + ' ' + selectedViewer.dataset.phone;
-        document.getElementById('ticketCount').value = 1;
-        updateTotalAmount();
-        document.getElementById('ticketModal').style.display = 'block';
+
+        // 计算总价和座位信息
+        let totalPrice = 0;
+        const seatDescriptions = [];
+        let representativePrice = 0;
+        selectedSeats.forEach((info, id) => {
+          totalPrice += info.price;
+          seatDescriptions.push(`${info.name} ${info.row}排${info.col}座`);
+          representativePrice = info.price;
+        });
+
+        // 创建订单
+        const formData = new FormData();
+        formData.append('match_id', matchId);
+        formData.append('ticket_price', representativePrice);
+        formData.append('ticket_count', selectedSeats.size);
+        formData.append('viewer_id', selectedViewer.value);
+        formData.append('id_card', selectedViewer.dataset.idcard);
+        formData.append('phone', selectedViewer.dataset.phone);
+
+        try {
+          this.disabled = true;
+          this.textContent = '正在创建订单…';
+          const response = await fetch('{% url "core:create_order" %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': csrftoken }
+          });
+
+          if (!response.ok) {
+            if (response.status === 403) {
+              alert('登录已过期，请重新登录');
+              window.location.href = '/tickets/login/';
+              return;
+            }
+            alert('服务器错误（' + response.status + '），请重试');
+            return;
+          }
+
+          const text = await response.text();
+          let data;
+          try { data = JSON.parse(text); } catch(e) {
+            console.error('非JSON响应:', text.substring(0, 200));
+            alert('服务器响应异常，请刷新重试');
+            return;
+          }
+
+          if (data.success) {
+            // 跳转到支付宝支付页面
+            window.location.href = data.pay_url;
+          } else {
+            alert(data.message || '创建订单失败');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('网络错误，请重试');
+        } finally {
+          this.disabled = false;
+          this.textContent = '确认选座，去支付';
+        }
       });
     }
 
@@ -483,49 +558,11 @@
     }
     bindViewerEvents();
 
-    // 更新总金额
-    document.getElementById('ticketCount').addEventListener('input', updateTotalAmount);
-    function updateTotalAmount() {
-      const price = parseInt(document.getElementById('ticketPrice').value) || 0;
-      const count = parseInt(document.getElementById('ticketCount').value) || 1;
-      document.getElementById('totalAmount').textContent = '¥' + (price * count);
-    }
-
     // 关闭弹窗
     document.querySelectorAll('.close').forEach(close => {
       close.addEventListener('click', function() {
         this.closest('.modal').style.display = 'none';
       });
-    });
-
-    // 表单提交
-    document.getElementById('ticketForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      
-      try {
-        const response = await fetch('{% url "core:create_order" %}', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-CSRFToken': csrftoken
-          }
-        });
-        const data = await response.json();
-        
-        if (data.success) {
-          document.getElementById('ticketModal').style.display = 'none';
-          currentOrderNumber = data.order_number;
-          document.getElementById('orderNumber').textContent = data.order_number;
-          document.getElementById('paymentAmount').textContent = '¥' + data.total_amount;
-          document.getElementById('paymentModal').style.display = 'block';
-        } else {
-          alert(data.message || '创建订单失败');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('网络错误，请重试');
-      }
     });
 
     // 确认支付
