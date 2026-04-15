@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ team.short_name }} 购票 - 中超赛事管理{% endblock %}
+
+{% block content %}
+  <a href="{% url 'core:tickets' %}" class="back-link">← 返回选择球队</a>
+  <h2 class="section-title">{{ team.short_name }} 购票</h2>
+
+  <!-- 选择观影人 -->
+  <div class="viewer-section">
+    <h3 class="subsection-title">选择观影人</h3>
+    <div class="viewer-list" id="viewerList">
+      {% for v in viewers %}
+        {% if not forloop.first %}<hr class="viewer-divider">{% endif %}
+        <div class="viewer-item-wrap" data-viewer-id="{{ v.id }}">
+          <label class="viewer-item">
+            <input type="radio" name="viewer" value="{{ v.id }}" data-name="{{ v.name }}" data-idcard="{{ v.id_card }}" data-phone="{{ v.phone }}">
+            <div class="viewer-info">
+              <span class="viewer-name">{{ v.name }}</span>
+              <span class="viewer-detail">身份证号：{{ v.id_card }}</span>
+              <span class="viewer-detail">手机号：{{ v.phone }}</span>
+            </div>
+          </label>
+          <div class="viewer-actions">
+            <button type="button" class="btn-edit" data-id="{{ v.id }}" data-name="{{ v.name }}" data-idcard="{{ v.id_card }}" data-phone="{{ v.phone }}">编辑</button>
+            <button type="button" class="btn-delete" data-id="{{ v.id }}">删除</button>
+          </div>
+        </div>
+      {% empty %}
+        <p class="no-viewers">暂无观影人，请先添加</p>
+      {% endfor %}
+    </div>
+    <button type="button" id="addViewerBtn" class="btn-secondary-small">+ 添加观影人</button>
+  </div>
+
+  {% if next_match %}
+    <div class="match-info">
+      <p><strong>下一场比赛</strong></p>
+      <p>{{ next_match.home_team.short_name }} vs {{ next_match.away_team.short_name }}</p>
+      <p>{{ next_match.match_time|date:"Y年m月d日 H:i" }} · {{ next_match.stadium|default:next_match.home_team.stadium }}</p>
+    </div>
+
+    {% if ticket_prices %}
+      <div class="stadium-section">
+        <!-- 区域切换标签 -->
+        <div class="zone-tabs">
+          <button class="zone-tab active" data-zone="all">全局</button>
+          <button class="zone-tab" data-zone="A" style="--zone-color:#e74c3c;">
+            <span class="tab-dot" style="background:#e74c3c;"></span>A · ¥380
+          </button>
+          <button class="zone-tab" data-zone="B" style="--zone-color:#3498db;">
+            <span class="tab-dot" style="background:#3498db;"></span>B · ¥260
+          </button>
+          <button class="zone-tab" data-zone="C" style="--zone-color:#f39c12;">
+            <span class="tab-dot" style="background:#f39c12;"></span>C · ¥140
+          </button>
+          <button class="zone-tab" data-zone="D" style="--zone-color:#2ecc71;">
+            <span class="tab-dot" style="background:#2ecc71;"></span>D · ¥80
+          </button>
+        </div>
+
+        <!-- 球场座位图 -->
+        <div class="stadium-map" id="stadiumMap">
+          <div class="stadium-field">
+            <div class="field-inner">
+              <div class="field-center-line"></div>
+              <div class="field-center-circle"></div>
+              <div class="field-penalty field-penalty-left"></div>
+              <div class="field-penalty field-penalty-right"></div>
+              <div class="field-goal field-goal-left"></div>
+              <div class="field-goal field-goal-right"></div>
+            </div>
+          </div>
+          <!-- 座位由 JS 动态生成 -->
+        </div>
+
+        <!-- 底部选座信息栏 -->
+        <div class="seat-bar" id="seatBar" style="display:none;">
+          <div class="seat-bar-info">
+            <span class="seat-bar-dot" id="seatBarDot"></span>
+            <span id="seatBarText"></span>
+            <button type="button" class="seat-bar-close" id="seatBarClose">&times;</button>
+          </div>
+          <div class="seat-bar-action">
+            <span class="seat-bar-price" id="seatBarPrice"></span>
+            <button type="button" class="btn-confirm-seat" id="confirmSeatBtn">确认选座</button>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="placeholder-box">
+        <p>比赛尚未开票，敬请期待。</p>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="placeholder-box">
+      <p>暂无待进行的比赛。</p>
+    </div>
+  {% endif %}
+
+  <!-- 添加/编辑观影人弹窗 -->
+  <div id="viewerModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3 id="viewerModalTitle">添加观影人</h3>
+      <form id="viewerForm">{% csrf_token %}
+        <input type="hidden" id="viewerId" name="viewer_id">
+        <div class="form-group">
+          <label for="viewerName">姓名：</label>
+          <input type="text" id="viewerName" name="name" required placeholder="请输入姓名">
+        </div>
+        <div class="form-group">
+          <label for="viewerIdCard">身份证号：</label>
+          <input type="text" id="viewerIdCard" name="id_card" maxlength="18" required placeholder="请输入18位身份证号">
+        </div>
+        <div class="form-group">
+          <label for="viewerPhone">手机号：</label>
+          <input type="tel" id="viewerPhone" name="phone" maxlength="11" required placeholder="请输入11位手机号">
+        </div>
+        <button type="submit" class="btn-primary" id="viewerSubmitBtn">保存</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 购票表单弹窗 -->
+  <div id="ticketModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>填写购票信息</h3>
+      <form id="ticketForm">
+        <input type="hidden" id="matchId" name="match_id">
+        <input type="hidden" id="ticketPrice" name="ticket_price">
+        <input type="hidden" id="viewerId" name="viewer_id">
+        <input type="hidden" id="idCard" name="id_card">
+        <input type="hidden" id="phone" name="phone">
+        <div class="form-group">
+          <label>票档价格：<span id="selectedPrice"></span></label>
+        </div>
+        <div class="form-group">
+          <label>观影人：<span id="selectedViewer"></span></label>
+        </div>
+        <div class="form-group">
+          <label for="ticketCount">购票张数：</label>
+          <input type="number" id="ticketCount" name="ticket_count" min="1" max="10" value="1" required>
+        </div>
+        <div class="form-group">
+          <label>总金额：<span id="totalAmount">¥0</span></label>
+        </div>
+        <button type="submit" class="btn-primary">确认购买</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 支付二维码弹窗 -->
+  <div id="paymentModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>请扫描二维码支付</h3>
+      <div id="paymentQrContainer" class="payment-qr-container">
+        <div class="payment-qr-item">
+          <p>微信支付</p>
+          <div class="qr-img-wrap">
+            <img src="{% static 'images/payment/wechat.png' %}" alt="微信支付" class="payment-qr-img" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=qr-placeholder>请将 wechat.png 放入 static/images/payment/</span>';">
+          </div>
+        </div>
+        <div class="payment-qr-item">
+          <p>支付宝支付</p>
+          <div class="qr-img-wrap">
+            <img src="{% static 'images/payment/alipay.png' %}" alt="支付宝支付" class="payment-qr-img" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=qr-placeholder>请将 alipay.png 放入 static/images/payment/</span>';">
+          </div>
+        </div>
+      </div>
+      <p style="margin-top:1rem;text-align:center;">订单号：<span id="orderNumber"></span></p>
+      <p style="text-align:center;">支付金额：<span id="paymentAmount"></span></p>
+      <button id="confirmPaymentBtn" class="btn-primary" style="margin-top:1rem;display:block;margin-left:auto;margin-right:auto;">我已支付</button>
+    </div>
+  </div>
+
+  <script>
+    // 获取CSRF token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    const matchId = {{ next_match.id|default:0 }};
+    let currentOrderNumber = '';
+
+    /* ══════════════ 球场座位图逻辑 ══════════════ */
+    const ZONES = {
+      A: { name: 'VIP贵宾区', price: 380, color: '#e74c3c' },
+      B: { name: '主看台区',  price: 260, color: '#3498db' },
+      C: { name: '侧看台区',  price: 140, color: '#f39c12' },
+      D: { name: '球门后方区', price: 80,  color: '#2ecc71' },
+    };
+
+    // 已售座位（模拟随机 15% 已售）
+    const soldSeats = new Set();
+    let selectedSeat = null;
+
+    function buildSeats() {
+      const map = document.getElementById('stadiumMap');
+      if (!map) return;
+
+      // 清除旧座位
+      map.querySelectorAll('.seat-row').forEach(r => r.remove());
+
+      const CX = 300, CY = 220; // 椭圆中心
+      // 每个区域对应的环带(从内到外)
+      const rings = [
+        // zone, 排数起, 排数止, 内半径rx起, ry起
+        { zone: 'A', rowStart: 1, rowEnd: 3,   rxBase: 155, ryBase: 105 },
+        { zone: 'B', rowStart: 4, rowEnd: 7,   rxBase: 185, ryBase: 125 },
+        { zone: 'C', rowStart: 8, rowEnd: 11,  rxBase: 225, ryBase: 155 },
+        { zone: 'D', rowStart: 12, rowEnd: 14, rxBase: 265, ryBase: 180 },
+      ];
+
+      const allSeats = [];
+      const step = 10; // 每环半径增量
+
+      rings.forEach(ring => {
+        for (let r = ring.rowStart; r <= ring.rowEnd; r++) {
+          const idx = r - ring.rowStart;
+          const rx = ring.rxBase + idx * step;
+          const ry = ring.ryBase + idx * (step * 0.7);
+          // 计算环上座位数量，越外越多
+          const count = Math.floor(2 * Math.PI * Math.sqrt((rx*rx + ry*ry)/2) / 14);
+          for (let i = 0; i < count; i++) {
+            const angle = (2 * Math.PI * i) / count - Math.PI / 2;
+            const x = CX + rx * Math.cos(angle);
+            const y = CY + ry * Math.sin(angle);
+            // 排除草坪区域 (内部椭圆)
+            const dx = (x - CX) / 140;
+            const dy = (y - CY) / 92;
+            if (dx*dx + dy*dy < 1) continue;
+            const seatId = `${ring.zone}-${r}-${i}`;
+            const sold = Math.random() < 0.15;
+            if (sold) soldSeats.add(seatId);
+            allSeats.push({ id: seatId, x, y, zone: ring.zone, row: r, col: i+1, sold });
+          }
+        }
+      });
+
+      // 用 SVG 渲染所有座位
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 600 440');
+      svg.classList.add('seats-svg');
+
+      allSeats.forEach(s => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', s.x.toFixed(1));
+        circle.setAttribute('cy', s.y.toFixed(1));
+        circle.setAttribute('r', '4');
+        circle.dataset.seatId = s.id;
+        circle.dataset.zone = s.zone;
+        circle.dataset.row = s.row;
+        circle.dataset.col = s.col;
+        if (s.sold) {
+          circle.classList.add('seat-dot', 'seat-sold');
+        } else {
+          circle.classList.add('seat-dot', 'seat-available');
+          circle.style.fill = ZONES[s.zone].color;
+        }
+        svg.appendChild(circle);
+      });
+
+      map.insertBefore(svg, map.querySelector('.stadium-field'));
+    }
+    buildSeats();
+
+    // 座位点击
+    document.getElementById('stadiumMap')?.addEventListener('click', function(e) {
+      const dot = e.target.closest('.seat-dot');
+      if (!dot || dot.classList.contains('seat-sold')) return;
+
+      // 取消之前选中
+      this.querySelectorAll('.seat-selected').forEach(s => {
+        s.classList.remove('seat-selected');
+        s.style.fill = ZONES[s.dataset.zone].color;
+      });
+
+      dot.classList.add('seat-selected');
+      dot.style.fill = '#fff';
+      const zone = dot.dataset.zone;
+      const info = ZONES[zone];
+      selectedSeat = { zone, row: dot.dataset.row, col: dot.dataset.col, price: info.price, name: info.name, color: info.color };
+
+      // 显示底部栏
+      const bar = document.getElementById('seatBar');
+      document.getElementById('seatBarDot').style.background = info.color;
+      document.getElementById('seatBarText').textContent = `${info.name} ${dot.dataset.row}排${dot.dataset.col}座`;
+      document.getElementById('seatBarPrice').innerHTML = `<span style="color:var(--primary);font-size:1.2rem;font-weight:700;">¥${info.price}</span> <span style="color:var(--text-muted);font-size:0.85rem;">(已选: 1)</span>`;
+      bar.style.display = 'flex';
+    });
+
+    // 关闭选座
+    document.getElementById('seatBarClose')?.addEventListener('click', function() {
+      document.querySelectorAll('.seat-selected').forEach(s => {
+        s.classList.remove('seat-selected');
+        s.style.fill = ZONES[s.dataset.zone].color;
+      });
+      selectedSeat = null;
+      document.getElementById('seatBar').style.display = 'none';
+    });
+
+    // 区域 tab 切换
+    document.querySelectorAll('.zone-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.zone-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        const zone = this.dataset.zone;
+        document.querySelectorAll('.seat-dot').forEach(dot => {
+          if (zone === 'all' || dot.dataset.zone === zone) {
+            dot.style.display = '';
+          } else {
+            dot.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // 确认选座按钮 → 打开购票弹窗
+    const confirmSeatBtn = document.getElementById('confirmSeatBtn');
+    if (confirmSeatBtn) {
+      confirmSeatBtn.addEventListener('click', function() {
+        if (!selectedSeat) return;
+        const selectedViewer = document.querySelector('input[name="viewer"]:checked');
+        if (!selectedViewer) {
+          alert('请先选择观影人');
+          return;
+        }
+        document.getElementById('matchId').value = matchId;
+        document.getElementById('ticketPrice').value = selectedSeat.price;
+        document.getElementById('selectedPrice').textContent = `¥${selectedSeat.price}（${selectedSeat.name} ${selectedSeat.row}排${selectedSeat.col}座）`;
+        document.getElementById('viewerId').value = selectedViewer.value;
+        document.getElementById('idCard').value = selectedViewer.dataset.idcard;
+        document.getElementById('phone').value = selectedViewer.dataset.phone;
+        document.getElementById('selectedViewer').textContent = selectedViewer.dataset.name + ' ' + selectedViewer.dataset.phone;
+        document.getElementById('ticketCount').value = 1;
+        updateTotalAmount();
+        document.getElementById('ticketModal').style.display = 'block';
+      });
+    }
+
+    // 添加观影人
+    document.getElementById('addViewerBtn').addEventListener('click', () => {
+      document.getElementById('viewerModalTitle').textContent = '添加观影人';
+      document.getElementById('viewerSubmitBtn').textContent = '保存';
+      document.getElementById('viewerId').value = '';
+      document.getElementById('viewerForm').reset();
+      document.getElementById('viewerModal').style.display = 'block';
+    });
+
+    function renderViewerItem(v, withDivider) {
+      const wrap = document.createElement('div');
+      wrap.className = 'viewer-item-wrap';
+      if (withDivider) {
+        const hr = document.createElement('hr');
+        hr.className = 'viewer-divider';
+        return [hr, wrap];
+      }
+      return [wrap];
+    }
+
+    function createViewerHtml(v) {
+      return `
+        <label class="viewer-item">
+          <input type="radio" name="viewer" value="${v.id}" data-name="${v.name}" data-idcard="${v.id_card}" data-phone="${v.phone}">
+          <div class="viewer-info">
+            <span class="viewer-name">${escapeHtml(v.name)}</span>
+            <span class="viewer-detail">身份证号：${escapeHtml(v.id_card)}</span>
+            <span class="viewer-detail">手机号：${escapeHtml(v.phone)}</span>
+          </div>
+        </label>
+        <div class="viewer-actions">
+          <button type="button" class="btn-edit" data-id="${v.id}" data-name="${escapeHtml(v.name)}" data-idcard="${v.id_card}" data-phone="${v.phone}">编辑</button>
+          <button type="button" class="btn-delete" data-id="${v.id}">删除</button>
+        </div>
+      `;
+    }
+    function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    document.getElementById('viewerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const viewerId = document.getElementById('viewerId').value;
+      const formData = new FormData(this);
+      const url = viewerId ? `/tickets/viewers/${viewerId}/edit/` : '{% url "core:add_viewer" %}';
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-CSRFToken': csrftoken }
+        });
+        const data = await response.json();
+        if (data.success) {
+          const v = data.viewer;
+          if (viewerId) {
+            const wrap = document.querySelector(`.viewer-item-wrap[data-viewer-id="${v.id}"]`);
+            if (wrap) {
+              wrap.outerHTML = `<div class="viewer-item-wrap" data-viewer-id="${v.id}">${createViewerHtml(v)}</div>`;
+              bindViewerEvents();
+            }
+          } else {
+            const list = document.getElementById('viewerList');
+            list.querySelector('.no-viewers')?.remove();
+            const count = list.querySelectorAll('.viewer-item-wrap').length;
+            if (count > 0) {
+              const hr = document.createElement('hr');
+              hr.className = 'viewer-divider';
+              list.appendChild(hr);
+            }
+            const div = document.createElement('div');
+            div.className = 'viewer-item-wrap';
+            div.dataset.viewerId = v.id;
+            div.innerHTML = createViewerHtml(v);
+            list.appendChild(div);
+          }
+          bindViewerEvents();
+          document.getElementById('viewerModal').style.display = 'none';
+          this.reset();
+        } else {
+          alert(data.message || '操作失败');
+        }
+      } catch (err) {
+        alert('网络错误，请重试');
+      }
+    });
+
+    function bindViewerEvents() {
+      document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.onclick = function() {
+          document.getElementById('viewerModalTitle').textContent = '编辑观影人';
+          document.getElementById('viewerSubmitBtn').textContent = '保存';
+          document.getElementById('viewerId').value = this.dataset.id;
+          document.getElementById('viewerName').value = this.dataset.name;
+          document.getElementById('viewerIdCard').value = this.dataset.idcard;
+          document.getElementById('viewerPhone').value = this.dataset.phone;
+          document.getElementById('viewerModal').style.display = 'block';
+        };
+      });
+      document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.onclick = async function() {
+          if (!confirm('确定删除该观影人？')) return;
+          const id = this.dataset.id;
+          try {
+            const res = await fetch(`/tickets/viewers/${id}/delete/`, {
+              method: 'POST',
+              headers: { 'X-CSRFToken': csrftoken }
+            });
+            const data = await res.json();
+            if (data.success) {
+              const wrap = this.closest('.viewer-item-wrap');
+              const prev = wrap.previousElementSibling;
+              if (prev && prev.classList.contains('viewer-divider')) prev.remove();
+              wrap.remove();
+              const list = document.getElementById('viewerList');
+              if (!list.querySelector('.viewer-item-wrap')) {
+                const p = document.createElement('p');
+                p.className = 'no-viewers';
+                p.textContent = '暂无观影人，请先添加';
+                list.appendChild(p);
+              }
+            } else {
+              alert(data.message || '删除失败');
+            }
+          } catch (err) {
+            alert('网络错误，请重试');
+          }
+        };
+      });
+    }
+    bindViewerEvents();
+
+    // 更新总金额
+    document.getElementById('ticketCount').addEventListener('input', updateTotalAmount);
+    function updateTotalAmount() {
+      const price = parseInt(document.getElementById('ticketPrice').value) || 0;
+      const count = parseInt(document.getElementById('ticketCount').value) || 1;
+      document.getElementById('totalAmount').textContent = '¥' + (price * count);
+    }
+
+    // 关闭弹窗
+    document.querySelectorAll('.close').forEach(close => {
+      close.addEventListener('click', function() {
+        this.closest('.modal').style.display = 'none';
+      });
+    });
+
+    // 表单提交
+    document.getElementById('ticketForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      
+      try {
+        const response = await fetch('{% url "core:create_order" %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': csrftoken
+          }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          document.getElementById('ticketModal').style.display = 'none';
+          currentOrderNumber = data.order_number;
+          document.getElementById('orderNumber').textContent = data.order_number;
+          document.getElementById('paymentAmount').textContent = '¥' + data.total_amount;
+          document.getElementById('paymentModal').style.display = 'block';
+        } else {
+          alert(data.message || '创建订单失败');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('网络错误，请重试');
+      }
+    });
+
+    // 确认支付
+    document.getElementById('confirmPaymentBtn').addEventListener('click', async function() {
+      try {
+        const response = await fetch(`/tickets/pay/${currentOrderNumber}/confirm/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await response.json();
+        
+        if (data.success) {
+          window.location.href = `/tickets/success/${currentOrderNumber}/`;
+        } else {
+          alert(data.message || '支付失败');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('网络错误，请重试');
+      }
+    });
+
+    // 点击外部关闭弹窗
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+  </script>
+{% endblock %}

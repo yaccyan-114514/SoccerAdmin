@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <div class="standings-layout">
+    <!-- 左侧边栏 -->
+    <aside class="standings-sidebar">
+      <div class="year-selector">
+        <label for="year-select" class="year-label">年份</label>
+        <select id="year-select" class="year-select" onchange="changeYear(this.value)">
+          {% for year in years %}
+            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <h3 class="sidebar-title">数据统计</h3>
+      <ul class="sidebar-menu">
+        <li><a href="#points" class="sidebar-link active" data-table="points">积分榜</a></li>
+        <li><a href="#goals-for" class="sidebar-link" data-table="goals-for">进球</a></li>
+        <li><a href="#goals-against" class="sidebar-link" data-table="goals-against">失球</a></li>
+        <li><a href="#assists" class="sidebar-link" data-table="assists">助攻</a></li>
+        <li><a href="#yellow-cards" class="sidebar-link" data-table="yellow-cards">黄牌</a></li>
+        <li><a href="#red-cards" class="sidebar-link" data-table="red-cards">红牌</a></li>
+        <li><a href="#penalties" class="sidebar-link" data-table="penalties">点球</a></li>
+        <li><a href="#shots" class="sidebar-link" data-table="shots">射门</a></li>
+        <li><a href="#shots-on-target" class="sidebar-link" data-table="shots-on-target">射正</a></li>
+        <li><a href="#offsides" class="sidebar-link" data-table="offsides">越位</a></li>
+        <li><a href="#corners" class="sidebar-link" data-table="corners">角球</a></li>
+        <li><a href="#passes" class="sidebar-link" data-table="passes">传球</a></li>
+        <li><a href="#fouls" class="sidebar-link" data-table="fouls">犯规</a></li>
+        <li><a href="#saves" class="sidebar-link" data-table="saves">扑救</a></li>
+      </ul>
+    </aside>
+
+    <!-- 右侧内容区 -->
+    <div class="standings-content">
+      <h2 class="section-title">{{ current_year }} 中超球队榜</h2>
+      
+      <!-- 积分榜 -->
+      <div class="stats-table-container" id="table-points">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>场次</th>
+              <th>胜</th>
+              <th>平</th>
+              <th>负</th>
+              <th>进球</th>
+              <th>失球</th>
+              <th>积分</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.matches_played }}</td>
+                <td>{{ s.wins }}</td>
+                <td>{{ s.draws }}</td>
+                <td>{{ s.losses }}</td>
+                <td>{{ s.goals_for }}</td>
+                <td>{{ s.goals_against }}</td>
+                <td>{{ s.points }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="9" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 进球榜 -->
+      <div class="stats-table-container" id="table-goals-for" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>进球</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_goals_for %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.goals_for }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 失球榜 -->
+      <div class="stats-table-container" id="table-goals-against" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>失球</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_goals_against %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.goals_against }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 助攻榜 -->
+      <div class="stats-table-container" id="table-assists" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>助攻</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_assists %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.assists }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 黄牌榜 -->
+      <div class="stats-table-container" id="table-yellow-cards" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>黄牌</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_yellow_cards %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.yellow_cards }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 红牌榜 -->
+      <div class="stats-table-container" id="table-red-cards" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>红牌</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_red_cards %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.red_cards }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 点球榜 -->
+      <div class="stats-table-container" id="table-penalties" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>点球</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_penalties %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.penalties }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 射门榜 -->
+      <div class="stats-table-container" id="table-shots" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>射门</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_shots %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.shots }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 射正榜 -->
+      <div class="stats-table-container" id="table-shots-on-target" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>射正</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_shots_on_target %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.shots_on_target }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 越位榜 -->
+      <div class="stats-table-container" id="table-offsides" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>越位</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_offsides %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.offsides }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 角球榜 -->
+      <div class="stats-table-container" id="table-corners" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>角球</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_corners %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.corners }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 传球榜 -->
+      <div class="stats-table-container" id="table-passes" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>传球</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_passes %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.passes }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 犯规榜 -->
+      <div class="stats-table-container" id="table-fouls" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>犯规</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_fouls %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.fouls }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 扑救榜 -->
+      <div class="stats-table-container" id="table-saves" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球队</th>
+              <th>扑救</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in standings_by_saves %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+                    {% if s.team.get_logo_filename %}
+                      <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+                    {% endif %}
+                    {{ s.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ s.saves }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 切换年份
+    function changeYear(year) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('year', year);
+      window.location.href = url.toString();
+    }
+    
+    // 切换统计表格
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const tableId = this.getAttribute('data-table');
+        
+        // 隐藏所有表格
+        document.querySelectorAll('.stats-table-container').forEach(container => {
+          container.style.display = 'none';
+        });
+        
+        // 显示选中的表格
+        document.getElementById('table-' + tableId).style.display = 'block';
+        
+        // 更新侧边栏激活状态
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+{% endblock %}

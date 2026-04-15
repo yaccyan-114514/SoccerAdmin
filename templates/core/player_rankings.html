@@ -1,0 +1,681 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}球员榜 - 中超赛事管理{% endblock %}
+
+{% block content %}
+  <div class="standings-layout">
+    <!-- 左侧边栏 -->
+    <aside class="standings-sidebar">
+      <div class="year-selector">
+        <label for="year-select" class="year-label">年份</label>
+        <select id="year-select" class="year-select" onchange="changeYear(this.value)">
+          {% for year in years %}
+            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <h3 class="sidebar-title">数据统计</h3>
+      <ul class="sidebar-menu">
+        <li><a href="#goals" class="sidebar-link active" data-table="goals">射手榜</a></li>
+        <li><a href="#assists" class="sidebar-link" data-table="assists">助攻榜</a></li>
+        <li><a href="#yellow-cards" class="sidebar-link" data-table="yellow-cards">黄牌</a></li>
+        <li><a href="#red-cards" class="sidebar-link" data-table="red-cards">红牌</a></li>
+        <li><a href="#penalties" class="sidebar-link" data-table="penalties">点球</a></li>
+        <li><a href="#shots" class="sidebar-link" data-table="shots">射门</a></li>
+        <li><a href="#shots-on-target" class="sidebar-link" data-table="shots-on-target">射正</a></li>
+        <li><a href="#dribbles" class="sidebar-link" data-table="dribbles">过人</a></li>
+        <li><a href="#fouls" class="sidebar-link" data-table="fouls">犯规</a></li>
+        <li><a href="#fouls-suffered" class="sidebar-link" data-table="fouls-suffered">被犯规</a></li>
+        <li><a href="#passes" class="sidebar-link" data-table="passes">传球</a></li>
+        <li><a href="#crosses" class="sidebar-link" data-table="crosses">传中</a></li>
+        <li><a href="#tackles" class="sidebar-link" data-table="tackles">抢断</a></li>
+        <li><a href="#clearances" class="sidebar-link" data-table="clearances">解围</a></li>
+        <li><a href="#saves" class="sidebar-link" data-table="saves">扑救</a></li>
+        <li><a href="#market-value" class="sidebar-link" data-table="market-value">身价</a></li>
+      </ul>
+    </aside>
+
+    <!-- 右侧内容区 -->
+    <div class="standings-content">
+      <h2 class="section-title">{{ current_year }} 中超球员榜</h2>
+      
+      <!-- 射手榜 -->
+      <div class="stats-table-container" id="table-goals">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_goals %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.goals }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 助攻榜 -->
+      <div class="stats-table-container" id="table-assists" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_assists %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.assists }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 黄牌榜 -->
+      <div class="stats-table-container" id="table-yellow-cards" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_yellow_cards %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.yellow_cards }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 红牌榜 -->
+      <div class="stats-table-container" id="table-red-cards" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_red_cards %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.red_cards }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 点球榜 -->
+      <div class="stats-table-container" id="table-penalties" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_penalties %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.penalties }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 射门榜 -->
+      <div class="stats-table-container" id="table-shots" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_shots %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.shots }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 射正榜 -->
+      <div class="stats-table-container" id="table-shots-on-target" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_shots_on_target %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.shots_on_target }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 过人榜 -->
+      <div class="stats-table-container" id="table-dribbles" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_dribbles %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.dribbles }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 犯规榜 -->
+      <div class="stats-table-container" id="table-fouls" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_fouls %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.fouls }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 被犯规榜 -->
+      <div class="stats-table-container" id="table-fouls-suffered" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_fouls_suffered %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.fouls_suffered }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 传球榜 -->
+      <div class="stats-table-container" id="table-passes" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_passes %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.passes }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 传中榜 -->
+      <div class="stats-table-container" id="table-crosses" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_crosses %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.crosses }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 抢断榜 -->
+      <div class="stats-table-container" id="table-tackles" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_tackles %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.tackles }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 解围榜 -->
+      <div class="stats-table-container" id="table-clearances" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_clearances %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.clearances }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 扑救榜 -->
+      <div class="stats-table-container" id="table-saves" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_saves %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.saves }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 身价榜 -->
+      <div class="stats-table-container" id="table-market-value" style="display:none;">
+        <table class="standings-table">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>球员头像</th>
+              <th>球队</th>
+              <th>总计（万元）</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in players_by_market_value %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                  <div class="player-avatar">
+                    <img src="{% static 'images/players/placeholder.png' %}" alt="{{ p.name }}" class="player-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="player-avatar-placeholder" style="display:none;">{{ p.name|first }}</div>
+                  </div>
+                  <span class="player-name">{{ p.name }}</span>
+                </td>
+                <td>
+                  <a href="{% url 'teams:detail' p.team.pk %}" class="team-link">
+                    {{ p.team.short_name }}
+                  </a>
+                </td>
+                <td>{{ p.market_value }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:2rem;">暂无数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 切换年份
+    function changeYear(year) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('year', year);
+      window.location.href = url.toString();
+    }
+    
+    // 切换统计表格
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const tableId = this.getAttribute('data-table');
+        
+        // 隐藏所有表格
+        document.querySelectorAll('.stats-table-container').forEach(container => {
+          container.style.display = 'none';
+        });
+        
+        // 显示选中的表格
+        document.getElementById('table-' + tableId).style.display = 'block';
+        
+        // 更新侧边栏激活状态
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+{% endblock %}

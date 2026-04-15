@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}支付成功 - 中超赛事管理{% endblock %}
+
+{% block content %}
+  <div class="payment-success">
+    <div class="success-icon">✓</div>
+    <h2>购票成功！</h2>
+    <div class="order-info">
+      <p><strong>订单号：</strong>{{ order.order_number }}</p>
+      <p><strong>比赛：</strong>{{ order.match.home_team.short_name }} vs {{ order.match.away_team.short_name }}</p>
+      <p><strong>比赛时间：</strong>{{ order.match.match_time|date:"Y年m月d日 H:i" }}</p>
+      <p><strong>票档：</strong>¥{{ order.ticket_price }}</p>
+      <p><strong>购票张数：</strong>{{ order.ticket_count }}张</p>
+      <p><strong>总金额：</strong>¥{{ order.total_amount }}</p>
+      <p><strong>身份证号：</strong>{{ order.id_card }}</p>
+      <p><strong>手机号：</strong>{{ order.phone }}</p>
+    </div>
+    <div style="margin-top:2rem;">
+      <a href="{% url 'core:tickets' %}" class="btn-primary">返回购票</a>
+      <a href="{% url 'core:home' %}" class="btn-secondary" style="margin-left:1rem;">返回首页</a>
+    </div>
+  </div>
+{% endblock %}

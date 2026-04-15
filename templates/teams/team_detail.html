@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.short_name }} - 球队介绍{% endblock %}
+
+{% block content %}
+  <a href="{% url 'core:home' %}" class="back-link">← 返回首页</a>
+  <div class="team-detail">
+    <h1>{{ team.short_name }}</h1>
+    <div class="meta">
+      <span><strong>全称：</strong>{{ team.name }}</span>
+      <span><strong>城市：</strong>{{ team.city }}</span>
+      <span><strong>主场：</strong>{{ team.stadium|default:"—" }}</span>
+      {% if team.founded_year %}<span><strong>成立年份：</strong>{{ team.founded_year }}</span>{% endif %}
+    </div>
+    <p>球队介绍内容待完善。</p>
+  </div>
+{% endblock %}

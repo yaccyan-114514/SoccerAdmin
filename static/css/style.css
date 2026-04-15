@@ -1,0 +1,1042 @@
+/* 足球赛事管理系统 - 公共界面样式 */
+:root {
+  --primary: #c62828;
+  --primary-dark: #8e0000;
+  --accent: #c9a227;
+  --bg: #f5f5f5;
+  --card-bg: #fff;
+  --text: #333;
+  --text-muted: #666;
+  --border: #e0e0e0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* 顶部导航 */
+.site-header {
+  background: var(--primary);
+  color: #fff;
+  padding: 1rem 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.site-header .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.site-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.nav-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.nav-btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(255,255,255,0.35);
+  color: #fff;
+}
+
+.nav-btn.active {
+  background: var(--accent);
+  color: #1a1a1a;
+}
+
+/* 主内容区 */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* 区块标题 */
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 2rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary);
+  color: var(--primary-dark);
+}
+
+/* 新闻卡片 */
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.news-item {
+  background: var(--card-bg);
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  border-left: 4px solid var(--primary);
+}
+
+.news-item .date {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.news-item .title {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.news-item .summary {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+
+/* 积分榜表格 */
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.standings-table th,
+.standings-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.standings-table th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.standings-table th:first-child,
+.standings-table td:first-child {
+  text-align: center;
+  width: 3rem;
+}
+
+.standings-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.standings-table .team-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.standings-table .team-link:hover {
+  text-decoration: underline;
+}
+
+/* 球队详情页 */
+.team-detail {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.team-detail h1 {
+  margin: 0 0 1rem;
+  color: var(--primary-dark);
+}
+
+.team-detail .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.team-detail .meta span {
+  color: var(--text-muted);
+}
+
+.team-detail .meta strong {
+  color: var(--text);
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* 占位页 */
+.placeholder-box {
+  background: var(--card-bg);
+  padding: 3rem;
+  border-radius: 8px;
+  text-align: center;
+  color: var(--text-muted);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* 购票 - 球队选择 */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+
+/* 登录 */
+.login-box {
+  max-width: 360px;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.login-box label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 500;
+}
+
+.login-box input[type="email"],
+.login-box input[type="password"] {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.login-box button {
+  padding: 0.6rem 1.5rem;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.login-box button:hover {
+  background: var(--primary-dark);
+}
+
+.login-box .msg {
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+}
+
+.login-box .msg.error {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* 球队购票 - 比赛信息与票档 */
+.match-info {
+  background: #f8f9fa;
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.ticket-tiers {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.price-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.price-list li {
+  padding: 0.75rem 1.25rem;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* 队徽样式 */
+.team-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.team-logo-small {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.team-logo-large {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.team-with-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.team-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 球队榜布局 - 左侧边栏 + 右侧内容 */
+.standings-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.standings-sidebar {
+  width: 200px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  padding: 1rem;
+  position: sticky;
+  top: 1.5rem;
+}
+
+.sidebar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary);
+  color: var(--primary-dark);
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 0.6rem 0.8rem;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.sidebar-link:hover {
+  background: #f8f9fa;
+  color: var(--primary);
+}
+
+.sidebar-link.active {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 500;
+}
+
+.standings-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stats-table-container {
+  margin-top: 1rem;
+}
+  padding: 0.75rem 1rem;
+  background: var(--card-bg);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: background 0.2s;
+}
+
+.team-card .team-logo {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.5rem;
+}
+
+.team-card:hover {
+  background: #ffebee;
+}
+
+.standings-table .team-with-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.schedule-team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.schedule-team.home {
+  justify-content: flex-start;
+}
+
+.schedule-team.away {
+  justify-content: flex-end;
+}
+
+/* 弹窗样式 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: var(--card-bg);
+  margin: 5% auto;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 20px;
+}
+
+.close:hover,
+.close:focus {
+  color: var(--primary);
+}
+
+/* 表单样式 */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.form-group input[type="text"],
+.form-group input[type="tel"],
+.form-group input[type="number"] {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.price-item {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.price-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* 观影人选择 */
+.viewer-section {
+  background: var(--card-bg);
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.subsection-title {
+  font-size: 1rem;
+  margin: 0 0 1rem;
+  color: var(--primary-dark);
+}
+
+.viewer-list {
+  margin-bottom: 1rem;
+}
+
+.viewer-item-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  gap: 1rem;
+}
+
+.viewer-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.5rem 0;
+}
+
+.viewer-item {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.viewer-item input {
+  margin-right: 0.5rem;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+.viewer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.viewer-name {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.viewer-detail {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.viewer-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-edit {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.btn-edit:hover {
+  background: #bbdefb;
+}
+
+.btn-delete {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-delete:hover {
+  background: #ffcdd2;
+}
+
+.no-viewers {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.btn-secondary-small {
+  padding: 0.4rem 0.8rem;
+  background: #6c757d;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-secondary-small:hover {
+  background: #5a6268;
+}
+
+/* 支付二维码图片 */
+.payment-qr-container {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 1rem 0;
+}
+
+.payment-qr-item {
+  text-align: center;
+}
+
+.payment-qr-item p {
+  margin: 0 0 0.5rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.payment-qr-img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.qr-img-wrap {
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-placeholder {
+  width: 180px;
+  height: 180px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+/* 支付成功页面 */
+.payment-success {
+  max-width: 600px;
+  margin: 2rem auto;
+  background: var(--card-bg);
+  padding: 3rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  background: #4caf50;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: bold;
+}
+
+.order-info {
+  text-align: left;
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 6px;
+  margin-top: 1.5rem;
+}
+
+.order-info p {
+  margin: 0.75rem 0;
+  color: var(--text);
+}
+
+.btn-secondary {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #6c757d;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  color: #fff;
+}
+
+/* 球员头像样式 */
+.player-avatar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-avatar-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.player-avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+}
+
+.player-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* 年份选择器样式 */
+.year-selector {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.year-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.year-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.year-select:hover {
+  border-color: var(--primary);
+}
+
+.year-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.1);
+}
+
+/* ── 球场座位图 ── */
+.stadium-section {
+  background: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+/* 区域切换 tabs */
+.zone-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.zone-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.zone-tab:hover { border-color: #999; }
+.zone-tab.active {
+  border-color: #333;
+  background: #333;
+  color: #fff;
+  font-weight: 600;
+}
+
+.tab-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* 球场容器 */
+.stadium-map {
+  position: relative;
+  background: #f0ede5;
+  padding: 0;
+  min-height: 320px;
+  overflow: hidden;
+}
+
+.seats-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 2;
+}
+
+/* 座位圆点 */
+.seat-dot {
+  cursor: pointer;
+  transition: transform 0.12s, opacity 0.12s;
+  stroke: none;
+}
+
+.seat-dot.seat-available:hover {
+  r: 5.5;
+  filter: brightness(1.2);
+}
+
+.seat-dot.seat-sold {
+  fill: #ccc;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.seat-dot.seat-selected {
+  fill: #fff !important;
+  stroke: #333;
+  stroke-width: 2;
+  r: 5.5;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.3));
+}
+
+/* 中央球场草坪 */
+.stadium-field {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 140px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.field-inner {
+  width: 100%;
+  height: 100%;
+  background: #3a7d32;
+  border: 2px solid rgba(255,255,255,0.6);
+  border-radius: 4px;
+  position: relative;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.field-center-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,0.4);
+}
+
+.field-center-circle {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.field-penalty {
+  position: absolute;
+  width: 50px;
+  height: 70px;
+  border: 1px solid rgba(255,255,255,0.3);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.field-penalty-left { left: 0; border-left: none; }
+.field-penalty-right { right: 0; border-right: none; }
+
+.field-goal {
+  position: absolute;
+  width: 10px;
+  height: 30px;
+  border: 1px solid rgba(255,255,255,0.3);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.field-goal-left { left: -10px; border-right: none; }
+.field-goal-right { right: -10px; border-left: none; }
+
+/* 底部选座栏 */
+.seat-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--border);
+  background: #fff;
+}
+
+.seat-bar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.seat-bar-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.seat-bar-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0 0.3rem;
+  line-height: 1;
+}
+
+.seat-bar-action {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-confirm-seat {
+  background: #e8530e;
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1.4rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-confirm-seat:hover {
+  background: #d14600;
+}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - 购票{% endblock %}
+
+{% block content %}
+  <h2 class="section-title">购票登录</h2>
+  <div class="login-box">
+    {% if messages %}
+      {% for msg in messages %}
+        <p class="msg {{ msg.tags }}">{{ msg }}</p>
+      {% endfor %}
+    {% endif %}
+    <form method="post" action="{% url 'core:tickets_login' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.GET.next }}">
+      <p>
+        <label>邮箱</label>
+        <input type="email" name="email" required placeholder="请输入邮箱">
+      </p>
+      <p>
+        <label>密码</label>
+        <input type="password" name="password" required placeholder="请输入密码">
+      </p>
+      <p>
+        <button type="submit">登录</button>
+      </p>
+    </form>
+    <p><a href="{% url 'core:home' %}">返回首页</a></p>
+  </div>
+{% endblock %}

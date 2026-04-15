@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <h2 class="section-title">比赛新闻</h2>
+  <div class="news-list">
+    {% for news in news_list %}
+      <article class="news-item">
+        <div class="date">{{ news.published_at|date:"Y/m/d H:i" }}</div>
+        <div class="title">{{ news.title }}</div>
+        {% if news.summary %}<div class="summary">{{ news.summary }}</div>{% endif %}
+      </article>
+    {% empty %}
+      <div class="news-item">
+        <div class="title">暂无新闻</div>
+        <div class="summary">敬请期待赛事相关报道</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <h2 class="section-title">2026 中超积分榜</h2>
+  <table class="standings-table">
+    <thead>
+      <tr>
+        <th>排名</th>
+        <th>球队</th>
+        <th>场次</th>
+        <th>胜</th>
+        <th>平</th>
+        <th>负</th>
+        <th>进球</th>
+        <th>失球</th>
+        <th>积分</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in standings %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>
+            <a href="{% url 'teams:detail' s.team.pk %}" class="team-link team-with-logo">
+              {% if s.team.get_logo_filename %}
+                <img src="{% static 'images/teams/' %}{{ s.team.get_logo_filename }}" alt="{{ s.team.short_name }}" class="team-logo-small">
+              {% endif %}
+              {{ s.team.short_name }}
+            </a>
+          </td>
+          <td>{{ s.matches_played }}</td>
+          <td>{{ s.wins }}</td>
+          <td>{{ s.draws }}</td>
+          <td>{{ s.losses }}</td>
+          <td>{{ s.goals_for }}</td>
+          <td>{{ s.goals_against }}</td>
+          <td>{{ s.points }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="9" style="text-align:center;padding:2rem;">暂无数据</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
