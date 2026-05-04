@@ -1,0 +1,9 @@
+asgiref==3.11.1
+cffi==2.0.0
+cryptography==46.0.7
+Django==6.0.2
+pycparser==3.0
+pycryptodomex==3.23.0
+pyOpenSSL==26.0.0
+python-alipay-sdk==3.4.0
+sqlparse==0.5.5
